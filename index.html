@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Name — Portfolio</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      overflow: hidden;
+      font-family: 'Georgia', serif;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    /* ── Text in the centre of the screen ── */
+    #hero {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    #hero h1 {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 300;
+      letter-spacing: 0.3em;
+      color: #f0e8d8;
+      text-transform: uppercase;
+    }
+
+    #hero p {
+      margin-top: 1rem;
+      font-size: clamp(0.75rem, 1.5vw, 1rem);
+      letter-spacing: 0.5em;
+      color: #8a7a6a;
+      text-transform: uppercase;
+      font-family: sans-serif;
+    }
+
+    /* ── Small hint at the bottom ── */
+    #hint {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: #3a3030;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas"></canvas>
+
+  <div id="hero">
+    <!-- ✏️  Change these two lines to your own name and title -->
+    <h1>Your Name</h1>
+    <p>Creative Developer &amp; Designer</p>
+  </div>
+
+  <div id="hint">move your mouse · scroll to explore</div>
+
+  <!-- Three.js library (loaded from a free CDN — no install needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    /* =====================================================
+       SETUP  —  renderer, scene, camera
+    ===================================================== */
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: document.getElementById('canvas'),
+      antialias: true
+    });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0a0a0f, 1);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0a0a0f, 0.08);
+
+    const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 100);
+    camera.position.set(0, 0, 8);
+
+
+    /* =====================================================
+       LIGHTS  —  gives petals their colour and shine
+    ===================================================== */
+    scene.add(new THREE.AmbientLight(0x1a0a20, 2));
+
+    const pinkLight = new THREE.PointLight(0xc07090, 3, 20);
+    pinkLight.position.set(-3, 3, 3);
+    scene.add(pinkLight);
+
+    const purpleLight = new THREE.PointLight(0x5040c0, 2, 20);
+    purpleLight.position.set(3, -2, 2);
+    scene.add(purpleLight);
+
+    const warmLight = new THREE.PointLight(0xe0c080, 1.5, 15);
+    warmLight.position.set(0, 4, -2);
+    scene.add(warmLight);
+
+
+    /* =====================================================
+       ORCHID BUILDER
+       Each orchid is made from simple shapes:
+         • Petals  → flat bezier curves
+         • Column  → small cylinder in the centre
+         • Stem    → tube following a curved path
+    ===================================================== */
+
+    /** Returns a petal-shaped flat curve */
+    function petalShape(length, width) {
+      const s = new THREE.Shape();
+      s.moveTo(0, 0);
+      s.bezierCurveTo( width * 0.7, length * 0.2,  width * 0.9, length * 0.6,  0, length);
+      s.bezierCurveTo(-width * 0.9, length * 0.6, -width * 0.7, length * 0.2,  0, 0);
+      return s;
+    }
+
+    /** Returns the wider lip petal (labellum) shape */
+    function lipShape(length, width) {
+      const s = new THREE.Shape();
+      s.moveTo(0, 0);
+      s.bezierCurveTo( width * 1.2, length * 0.1,  width * 1.4, length * 0.5,  0, length);
+      s.bezierCurveTo(-width * 1.4, length * 0.5, -width * 1.2, length * 0.1,  0, 0);
+      return s;
+    }
+
+    /**
+     * createOrchid(x, y, z, scale, hue)
+     *   hue  0.0 = red,  0.5 = cyan,  0.75 = purple,  0.85 = pink/violet
+     */
+    function createOrchid(x, y, z, scale, hue) {
+      const group = new THREE.Group();
+
+      const petalColor  = new THREE.Color().setHSL(hue,        0.6, 0.55);
+      const lipColor    = new THREE.Color().setHSL(hue + 0.05, 0.9, 0.6);
+      const centerColor = new THREE.Color().setHSL(hue - 0.05, 0.8, 0.75);
+
+      const petalMat = new THREE.MeshPhongMaterial({
+        color: petalColor,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.88,
+        shininess: 60,
+        specular: new THREE.Color(0xffffff)
+      });
+
+      const lipMat = new THREE.MeshPhongMaterial({
+        color: lipColor,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.92,
+        shininess: 80,
+        specular: new THREE.Color(0xffffff)
+      });
+
+      // Five petals arranged in a ring
+      [90, 162, 234, 306, 18].forEach((deg, i) => {
+        const isSepal = i < 3;                // first 3 are slightly longer
+        const len = isSepal ? 1.0 : 0.85;
+        const wid = isSepal ? 0.28 : 0.22;
+        const geo = new THREE.ShapeGeometry(petalShape(len, wid), 16);
+        const mesh = new THREE.Mesh(geo, petalMat.clone());
+        const rad = (deg * Math.PI) / 180;
+        mesh.rotation.z = -rad;
+        mesh.rotation.x = -0.25 + Math.random() * 0.15;
+        mesh.position.set(Math.cos(rad) * 0.12, Math.sin(rad) * 0.12, -0.05 * i);
+        group.add(mesh);
+      });
+
+      // Lip petal pointing downward
+      const lip = new THREE.Mesh(
+        new THREE.ShapeGeometry(lipShape(0.7, 0.4), 16),
+        lipMat
+      );
+      lip.rotation.x = 0.3;
+      lip.position.set(0, -0.18, 0.05);
+      group.add(lip);
+
+      // Central column
+      const col = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.04, 0.35, 8),
+        new THREE.MeshPhongMaterial({ color: centerColor, shininess: 100 })
+      );
+      col.rotation.x = Math.PI / 2;
+      col.position.set(0, 0, 0.2);
+      group.add(col);
+
+      // Curved stem
+      const stemCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3( 0.00,  0.0,  0.00),
+        new THREE.Vector3( 0.10, -0.5,  0.00),
+        new THREE.Vector3(-0.05, -1.2, -0.10),
+        new THREE.Vector3( 0.05, -2.0, -0.15)
+      ]);
+      const stem = new THREE.Mesh(
+        new THREE.TubeGeometry(stemCurve, 12, 0.025, 6, false),
+        new THREE.MeshPhongMaterial({ color: 0x2a4a20, shininess: 30 })
+      );
+      stem.position.y = -0.1;
+      group.add(stem);
+
+      group.position.set(x, y, z);
+      group.scale.setScalar(scale);
+      return group;
+    }
+
+
+    /* =====================================================
+       PLACE ORCHIDS IN THE SCENE
+       ✏️  Add, remove, or move entries to change the layout
+           x = left/right,  y = up/down,  z = depth
+           s = size,  h = colour hue (0–1)
+    ===================================================== */
+    const orchidData = [
+      { x: -2.2, y:  0.5, z:  0.0, s: 1.10, h: 0.85 },
+      { x:  2.0, y:  0.2, z: -0.5, s: 0.95, h: 0.78 },
+      { x:  0.3, y:  1.8, z: -1.5, s: 0.75, h: 0.88 },
+      { x: -3.2, y: -0.8, z: -1.0, s: 0.80, h: 0.90 },
+      { x:  3.2, y: -0.5, z: -2.0, s: 0.65, h: 0.82 },
+      { x: -0.5, y: -1.5, z: -2.0, s: 0.60, h: 0.87 },
+    ];
+
+    const orchids = orchidData.map(d => {
+      const o = createOrchid(d.x, d.y, d.z, d.s, d.h);
+      scene.add(o);
+      return o;
+    });
+
+
+    /* =====================================================
+       FLOATING DUST PARTICLES
+    ===================================================== */
+    const particleCount = 200;
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 14;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
+    }
+    const dustGeo = new THREE.BufferGeometry();
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    scene.add(new THREE.Points(
+      dustGeo,
+      new THREE.PointsMaterial({ color: 0xc0a0c0, size: 0.04, transparent: true, opacity: 0.5 })
+    ));
+
+
+    /* =====================================================
+       MOUSE TRACKING  —  camera gently follows the cursor
+    ===================================================== */
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', e => {
+      mouseX =  (e.clientX / window.innerWidth  - 0.5) * 2;
+      mouseY = -(e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+
+    /* =====================================================
+       ANIMATION LOOP
+    ===================================================== */
+    let time = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.008;
+
+      // Camera drifts toward the mouse position slowly
+      camera.position.x += (mouseX * 0.8 - camera.position.x) * 0.04;
+      camera.position.y += (mouseY * 0.5 - camera.position.y) * 0.04;
+      camera.lookAt(0, 0, 0);
+
+      // Each orchid sways like it's in a gentle breeze
+      orchids.forEach((orchid, i) => {
+        orchid.rotation.y = Math.sin(time * 0.7 + i * 1.2) * 0.12;
+        orchid.rotation.z = Math.sin(time * 0.5 + i * 0.8) * 0.06;
+        orchid.position.y = orchidData[i].y + Math.sin(time * 0.6 + i) * 0.05;
+      });
+
+      // Lights slowly orbit for shifting colour
+      pinkLight.position.x = Math.sin(time * 0.4) * 4;
+      pinkLight.position.y = Math.cos(time * 0.3) * 3;
+      purpleLight.position.x = Math.cos(time * 0.35) * 4;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+
+    /* =====================================================
+       HANDLE WINDOW RESIZE
+    ===================================================== */
+    window.addEventListener('resize', () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+  </script>
+</body>
+</html>
