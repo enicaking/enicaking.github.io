@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vanda Sanderiana — Experiment</title>
+  <title>Vanda Sanderiana (Waling-waling)</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #080810; overflow: hidden; }
@@ -46,9 +46,9 @@ scene.add(rim);
    VANDA SANDERIANA ORCHID BUILDER
    ─────────────────────────────────────────
    Anatomy:
-   • 4 large rounded petals in a wide flat cross (top, left, right, bottom-ish)
-     – top 2 slightly narrower  (dorsal + lateral sepals)
-     – bottom 2 wider, more triangular, angled slightly down (lower sepals)
+   • 5 large rounded petals in a wide star (top, left, right, bottom-left, bottom-right)
+     – top 3 slightly narrower, lighter pink  (dorsal + lateral sepals)
+     – bottom 2 wider, more triangular, overlapping (lower sepals)
    • 1 small ruffled lip (labellum) — deep magenta, 3-lobed
    • Veining baked into vertex colours via a painted texture on a canvas
    ───────────────────────────────────────── */
@@ -153,13 +153,12 @@ function createVanda(x, y, z, scale, tilt) {
 
   /* Upper 2 petals — top-left and top-right */
   const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
-  [-38, 38].forEach(deg => {
-    const m = new THREE.Mesh(uGeo, matUpper);
-    const r = (deg * Math.PI) / 180;
-    m.rotation.z = -r;
-    m.rotation.x = -0.18;          // tilt slightly toward viewer
-    m.position.set(Math.sin(r) * 0.08, Math.cos(r) * 0.08, 0);
-    g.add(m);
+  const m = new THREE.Mesh(uGeo, matUpper);
+  const r = (deg * Math.PI) / 180;
+  m.rotation.z = -r;
+  m.rotation.x = -0.18;          // tilt slightly toward viewer
+  m.position.set(Math.sin(r) * 0.08, Math.cos(r) * 0.08, 0);
+  g.add(m);
   });
 
   /* Lower 2 petals — bottom-left and bottom-right, angled down */
