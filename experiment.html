@@ -93,21 +93,40 @@ Promise.all([
   lowerTex.wrapS = lowerTex.wrapT = THREE.ClampToEdgeWrapping;
 
   // Materials
+  // const matUpper = new THREE.MeshPhongMaterial({
+  //   map: upperTex,
+  //   side: THREE.DoubleSide,
+  //   transparent: true,
+  //   opacity: 1.0,
+  //   shininess: 55,
+  //   specular: new THREE.Color(0xffffff)
+  // });
+  // const matLower = new THREE.MeshPhongMaterial({
+  //   map: lowerTex,
+  //   side: THREE.DoubleSide,
+  //   transparent: true,
+  //   opacity: 0.9,
+  //   shininess: 55,
+  //   specular: new THREE.Color(0xffffff)
+  // });
+
   const matUpper = new THREE.MeshPhongMaterial({
     map: upperTex,
     side: THREE.DoubleSide,
     transparent: true,
     opacity: 1.0,
-    shininess: 55,
-    specular: new THREE.Color(0xffffff)
+    alphaTest: 0.1,
+    shininess: 10,
+    specular: new THREE.Color(0x333333)
   });
   const matLower = new THREE.MeshPhongMaterial({
-    map: lowerTex,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.9,
-    shininess: 55,
-    specular: new THREE.Color(0xffffff)
+      map: lowerTex,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9,
+      alphaTest: 0.1,
+      shininess: 10,
+      specular: new THREE.Color(0x333333)
   });
 
   // Geometries
