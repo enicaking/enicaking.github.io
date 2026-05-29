@@ -42,65 +42,8 @@ const rim = new THREE.PointLight(0xffe0a0, 1.5, 20);
 rim.position.set(0, -5, -3);
 scene.add(rim);
 
-/* ─────────────────────────────────────────
-   VANDA SANDERIANA ORCHID BUILDER
-   ─────────────────────────────────────────
-   Anatomy:
-   • 5 large rounded petals in a wide star (top, left, right, bottom-left, bottom-right)
-     – top 3 slightly narrower, lighter pink  (dorsal + lateral sepals)
-     – bottom 2 wider, more triangular, overlapping (lower sepals)
-   • 1 small ruffled lip (labellum) — deep magenta, 3-lobed
-   • Veining baked into vertex colours via a painted texture on a canvas
-   ───────────────────────────────────────── */
-
-/* Build a veined petal texture on a 2D canvas */
-function makePetalTexture(baseHex, veinHex, spots) {
-  const size = 256;
-  const cv = document.createElement('canvas');
-  cv.width = cv.height = size;
-  const ctx = cv.getContext('2d');
-
-  // Base fill
-  ctx.fillStyle = baseHex;
-  ctx.fillRect(0, 0, size, size);
-
-  // Radial veins from base
-  ctx.strokeStyle = veinHex;
-  ctx.lineWidth = 1.2;
-  ctx.globalAlpha = 0.55;
-  for (let i = 0; i < 14; i++) {
-    const angle = (i / 14) * Math.PI - Math.PI / 2;
-    ctx.beginPath();
-    ctx.moveTo(size / 2, size * 0.85);
-    const cx1 = size / 2 + Math.cos(angle - 0.3) * size * 0.3;
-    const cy1 = size * 0.85 - size * 0.35;
-    const ex = size / 2 + Math.cos(angle) * size * 0.55;
-    const ey = size * 0.85 - size * 0.82;
-    ctx.quadraticCurveTo(cx1, cy1, ex, ey);
-    ctx.stroke();
-  }
-
-  // Spots / blotches
-  if (spots) {
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = veinHex;
-    for (let i = 0; i < 60; i++) {
-      const sx = size * 0.15 + Math.random() * size * 0.7;
-      const sy = size * 0.05 + Math.random() * size * 0.8;
-      const r  = 1.5 + Math.random() * 4;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy, r, r * 1.4, Math.random() * Math.PI, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  ctx.globalAlpha = 1;
-  const tex = new THREE.CanvasTexture(cv);
-  return tex;
-}
-
-/* Petal shapes */
-function upperPetalShape() {     // broad rounded
+/* ── Petal shapes ── */
+function upperPetalShape() {
   const s = new THREE.Shape();
   s.moveTo(0, 0);
   s.bezierCurveTo( 0.55, 0.08,  0.75, 0.55,  0.45, 1.05);
@@ -109,7 +52,7 @@ function upperPetalShape() {     // broad rounded
   return s;
 }
 
-function lowerPetalShape() {    // wider, slightly triangular
+function lowerPetalShape() {
   const s = new THREE.Shape();
   s.moveTo(0, 0);
   s.bezierCurveTo( 0.65, 0.06,  0.90, 0.50,  0.55, 1.0);
@@ -118,121 +61,120 @@ function lowerPetalShape() {    // wider, slightly triangular
   return s;
 }
 
-function lipLobeShape(w, h) {   // one lobe of the 3-lobed lip
-  const s = new THREE.Shape();
-  s.moveTo(0, 0);
-  s.bezierCurveTo( w,  0.05,  w * 1.1,  h * 0.6,  0, h);
-  s.bezierCurveTo(-w * 1.1, h * 0.6, -w, 0.05,     0, 0);
-  return s;
-}
+/* ── Load textures from real petal images ── */
+const loader = new THREE.TextureLoader();
+const loadTexture = (url) => new Promise((resolve) => loader.load(url, resolve));
 
-/* ── Orchid factory ── */
-function createVanda(x, y, z, scale, tilt) {
-  const g = new THREE.Group();
-
-  // Textures
-  const upperTex = makePetalTexture('#f2adc4', '#9040a0', true);
-  const lowerTex = makePetalTexture('#4a1b28', '#6020a0', true);
-  const lipTex   = makePetalTexture('#7a1040', '#3a0020', false);
-
+Promise.all([
+  loadTexture('petal_upper.png'),
+  loadTexture('petal_lower.png')
+]).then(([upperTex, lowerTex]) => {
+  // Materials with loaded textures
   const matUpper = new THREE.MeshPhongMaterial({
-    map: upperTex, side: THREE.DoubleSide,
-    transparent: true, opacity: 1.00,
-    shininess: 55, specular: new THREE.Color(0xffffff)
+    map: upperTex,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 1.0,
+    shininess: 55,
+    specular: new THREE.Color(0xffffff)
   });
   const matLower = new THREE.MeshPhongMaterial({
-    map: lowerTex, side: THREE.DoubleSide,
-    transparent: true, opacity: 0.90,
-    shininess: 55, specular: new THREE.Color(0xffffff)
-  });
-  const matLip = new THREE.MeshPhongMaterial({
-    map: lipTex, side: THREE.DoubleSide,
-    transparent: true, opacity: 0.96,
-    shininess: 90, specular: new THREE.Color(0xff80c0)
+    map: lowerTex,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.9,
+    shininess: 55,
+    specular: new THREE.Color(0xffffff)
   });
 
-  /* Upper petals — top-left and top-right */
-const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
-[0].forEach(deg => {          
-  const m = new THREE.Mesh(uGeo, matUpper);
-  const r = (deg * Math.PI) / 180;
-  m.rotation.z = -r;
-  m.rotation.x = -0.18;
-  m.position.set(Math.sin(r) * 0.08, Math.cos(r) * 0.08, 0);
-  g.add(m);
-});             
-
-  /* Lower 2 petals — bottom-left and bottom-right, angled down */
+  // Geometries
+  const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
   const lGeo = new THREE.ShapeGeometry(lowerPetalShape(), 24);
-  [-130, 130].forEach(deg => {
-    const m = new THREE.Mesh(lGeo, matLower);
-    const r = (deg * Math.PI) / 180;
-    m.rotation.z = -r;
-    m.rotation.x = 0.0;           // angle slightly back
-    m.position.set(Math.sin(r) * 0.10, Math.cos(r) * 0.10, -0.04);
-    g.add(m);
+
+  /* ── Orchid factory ── */
+  function createVanda(x, y, z, scale, tilt) {
+    const g = new THREE.Group();
+
+    // Top petal (dorsal sepal)
+    [0].forEach(deg => {
+      const m = new THREE.Mesh(uGeo, matUpper);
+      const r = (deg * Math.PI) / 180;
+      m.rotation.z = -r;
+      m.rotation.x = -0.18;
+      m.position.set(Math.sin(r) * 0.08, Math.cos(r) * 0.08, 0);
+      g.add(m);
+    });
+
+    // Horizontal petals (lateral petals)
+    [-70, 70].forEach(deg => {
+      const m = new THREE.Mesh(uGeo, matUpper);
+      const r = (deg * Math.PI) / 180;
+      m.rotation.z = -r;
+      m.rotation.x = -0.0;
+      m.position.set(Math.sin(r) * 0.09, Math.cos(r) * 0.09, 0.02);
+      g.add(m);
+    });
+
+    // Lower two petals (lower sepals)
+    [-130, 130].forEach(deg => {
+      const m = new THREE.Mesh(lGeo, matLower);
+      const r = (deg * Math.PI) / 180;
+      m.rotation.z = -r;
+      m.rotation.x = 0.0;
+      m.position.set(Math.sin(r) * 0.10, Math.cos(r) * 0.10, -0.04);
+      g.add(m);
+    });
+
+    g.position.set(x, y, z);
+    g.scale.setScalar(scale);
+    g.rotation.z = tilt || 0;
+    return g;
+  }
+
+  /* ── Place flowers ── */
+  const flowerData = [
+    { x:  0.0, y:  0.3, z:  0.5, s: 2.20, t:  0.00 },
+    // { x: -2.6, y:  0.8, z: -0.3, s: 1.00, t:  0.12 },
+    // { x:  2.5, y:  0.5, z: -0.5, s: 1.00, t: -0.10 },
+    // { x: -1.2, y: -1.4, z: -0.8, s: 0.82, t:  0.20 },
+    // { x:  1.5, y: -1.2, z: -1.0, s: 0.82, t: -0.15 },
+    // { x: -3.5, y: -0.6, z: -1.5, s: 0.70, t:  0.08 },
+    // { x:  3.4, y:  1.1, z: -2.0, s: 0.65, t: -0.08 },
+    // { x:  0.6, y:  2.0, z: -2.5, s: 0.60, t:  0.05 },
+  ];
+
+  const flowers = flowerData.map(d => {
+    const f = createVanda(d.x, d.y, d.z, d.s, d.t);
+    scene.add(f);
+    return f;
   });
 
-  /* Horizontal spread petals — left and right */
-  [-70, 70].forEach(deg => {
-    const m = new THREE.Mesh(uGeo, matUpper);
-    const r = (deg * Math.PI) / 180;
-    m.rotation.z = -r;
-    m.rotation.x = -0.0;          // angle forward
-    m.position.set(Math.sin(r) * 0.09, Math.cos(r) * 0.09, 0.02);
-    g.add(m);
-  });
+  /* ── Animation (starts after textures load) ── */
+  let t = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    t += 0.007;
 
-  /* 3-lobed lip in the centre */
-  // Side lobes
-  // const sideGeo = new THREE.ShapeGeometry(lipLobeShape(0.18, 0.28), 12);
-  // [-0.22, 0.22].forEach(ox => {
-  //   const m = new THREE.Mesh(sideGeo, matLip);
-  //   m.rotation.x = 0.5;
-  //   m.position.set(ox, -0.12, 0.18);
-  //   g.add(m);
-  // });
-  // Centre lobe (slightly larger, points forward)
-  // const centreGeo = new THREE.ShapeGeometry(lipLobeShape(0.22, 0.38), 12);
-  // const centre = new THREE.Mesh(centreGeo, matLip);
-  // centre.rotation.x = 0.6;
-  // centre.position.set(0, -0.22, 0.22);
-  // g.add(centre);
+    camera.position.x += (mx * 1.0 - camera.position.x) * 0.055;
+    camera.position.y += (my * 0.6 - camera.position.y) * 0.055;
+    camera.lookAt(0, 0, 0);
 
-  // // Column (short, gold-tipped)
-  // const col = new THREE.Mesh(
-  //   new THREE.CylinderGeometry(0.05, 0.04, 0.28, 8),
-  //   new THREE.MeshPhongMaterial({ color: 0xf0d060, shininess: 120 })
-  // );
-  // col.rotation.x = Math.PI / 2;
-  // col.position.set(0, 0.04, 0.18);
-  // g.add(col);
+    flowers.forEach((f, i) => {
+      f.rotation.y = Math.sin(t * 0.6 + i * 1.3) * 0.10;
+      f.rotation.x = flowerData[i].t + Math.sin(t * 0.4 + i * 0.9) * 0.04;
+      f.position.y = flowerData[i].y + Math.sin(t * 0.5 + i * 1.1) * 0.04;
+    });
 
-  g.position.set(x, y, z);
-  g.scale.setScalar(scale);
-  g.rotation.z = tilt || 0;
-  return g;
-}
+    key.position.x = Math.sin(t * 0.3) * 4;
+    key.position.y = 4 + Math.cos(t * 0.25) * 2;
+    fill.position.x = Math.cos(t * 0.28) * 5;
 
-/* ── Place flowers ── */
-const flowerData = [
-  { x:  0.0, y:  0.3, z:  0.5, s: 2.20, t:  0.00 },
-  // { x: -2.6, y:  0.8, z: -0.3, s: 1.00, t:  0.12 },
-  // { x:  2.5, y:  0.5, z: -0.5, s: 1.00, t: -0.10 },
-  // { x: -1.2, y: -1.4, z: -0.8, s: 0.82, t:  0.20 },
-  // { x:  1.5, y: -1.2, z: -1.0, s: 0.82, t: -0.15 },
-  // { x: -3.5, y: -0.6, z: -1.5, s: 0.70, t:  0.08 },
-  // { x:  3.4, y:  1.1, z: -2.0, s: 0.65, t: -0.08 },
-  // { x:  0.6, y:  2.0, z: -2.5, s: 0.60, t:  0.05 },
-];
+    renderer.render(scene, camera);
+  }
+  animate();
+}).catch(err => console.error('Texture loading failed:', err));
 
-const flowers = flowerData.map(d => {
-  const f = createVanda(d.x, d.y, d.z, d.s, d.t);
-  scene.add(f);
-  return f;
-});
-
-/* ── Floating pollen particles ── */
+/* ── Floating pollen particles (unaffected by textures) ── */
 const pCount = 300;
 const pPos = new Float32Array(pCount * 3);
 for (let i = 0; i < pCount; i++) {
@@ -252,29 +194,6 @@ document.addEventListener('mousemove', e => {
   mx =  (e.clientX / window.innerWidth  - 0.5) * 2;
   my = -(e.clientY / window.innerHeight - 0.5) * 2;
 });
-
-/* ── Animation ── */
-let t = 0;
-(function animate() {
-  requestAnimationFrame(animate);
-  t += 0.007;
-
-  camera.position.x += (mx * 1.0 - camera.position.x) * 0.055;
-  camera.position.y += (my * 0.6 - camera.position.y) * 0.055;
-  camera.lookAt(0, 0, 0);
-
-  flowers.forEach((f, i) => {
-    f.rotation.y = Math.sin(t * 0.6 + i * 1.3) * 0.10;
-    f.rotation.x = flowerData[i].t + Math.sin(t * 0.4 + i * 0.9) * 0.04;
-    f.position.y = flowerData[i].y + Math.sin(t * 0.5 + i * 1.1) * 0.04;
-  });
-
-  key.position.x = Math.sin(t * 0.3) * 4;
-  key.position.y = 4 + Math.cos(t * 0.25) * 2;
-  fill.position.x = Math.cos(t * 0.28) * 5;
-
-  renderer.render(scene, camera);
-})();
 
 /* ── Resize ── */
 window.addEventListener('resize', () => {
