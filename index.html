@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Enica King — Portfolio</title>
+  <title>waling2xek</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -120,6 +120,101 @@
          • Stem    → tube following a curved path
     ===================================================== */
 
+    /* Build petal texture on a 2D canvas */
+    function makePetalTexture(baseHex, veinHex, veinCount = 7, spots = false) {
+      const size = 256;
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = size;
+      const ctx = cv.getContext('2d');
+    
+      // 1) Fill entire canvas with base colour
+      ctx.fillStyle = baseHex;
+      ctx.fillRect(0, 0, size, size);
+    
+      // 2) Draw subtle gradient from base to tip (optional, gives depth)
+      const gradient = ctx.createLinearGradient(0, 0, 0, size);
+      gradient.addColorStop(0, baseHex);
+      gradient.addColorStop(1, 'rgba(255,255,255,0.08)');  // faint white at tip
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+    
+      return new THREE.CanvasTexture(cv);
+    }
+    
+    /* Petal shapes */
+    function upperPetalShape() {     // broad rounded
+      const s = new THREE.Shape();
+      s.moveTo(0, 0);
+      s.bezierCurveTo( 0.55, 0.08,  0.75, 0.55,  0.45, 1.05);
+      s.bezierCurveTo( 0.20, 1.35,  -0.20, 1.35, -0.45, 1.05);
+      s.bezierCurveTo(-0.75, 0.55, -0.55, 0.08,   0, 0);
+      return s;
+    }
+    
+    function lowerPetalShape() {    // wider, slightly triangular
+      const s = new THREE.Shape();
+      s.moveTo(0, 0);
+      s.bezierCurveTo( 0.65, 0.06,  0.90, 0.50,  0.55, 1.0);
+      s.bezierCurveTo( 0.30, 1.30, -0.30, 1.30, -0.55, 1.0);
+      s.bezierCurveTo(-0.90, 0.50, -0.65, 0.06,   0, 0);
+      return s;
+    }
+    
+    /* ── Orchid ── */
+    function createVanda(x, y, z, scale, tilt) {
+      const g = new THREE.Group();
+    
+      // Textures
+      const upperTex = makePetalTexture('#f2adc4', '#9040a0', 9, false); // upper petals
+      const lowerTex = makePetalTexture('#4a1b28', '#6020a0', 27, true); // lower petals
+    
+      const matUpper = new THREE.MeshPhongMaterial({
+          map: upperTex,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.9,
+          shininess: 55,
+          specular: new THREE.Color(0x555555)
+      });
+      const matLower = new THREE.MeshPhongMaterial({
+          map: lowerTex,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.9,
+          alphaTest: 0.1,
+          shininess: 30,
+          specular: new THREE.Color(0x333333)
+      });
+    
+      /* Upper petals — top-left and top-right */
+      const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
+      [-70, 0, 70].forEach(deg => {          
+        const m = new THREE.Mesh(uGeo, matUpper);
+        const r = (deg * Math.PI) / 180;
+        m.rotation.z = -r;
+        m.rotation.x = -0.18;
+        m.position.set(Math.sin(r) * 0.08, Math.cos(r) * 0.08, 0);
+        g.add(m);
+      });             
+    
+      /* Lower 2 petals — bottom-left and bottom-right, angled down */
+      const lGeo = new THREE.ShapeGeometry(lowerPetalShape(), 24);
+      [-130, 130].forEach(deg => {
+        const m = new THREE.Mesh(lGeo, matLower);
+        const r = (deg * Math.PI) / 180;
+        m.rotation.z = -r;
+        m.rotation.x = 0.0;           // angle slightly back
+        m.position.set(Math.sin(r) * 0.10, Math.cos(r) * 0.10, -0.04);
+        g.add(m);
+      });
+    
+      g.position.set(x, y, z);
+      g.scale.setScalar(scale);
+      g.rotation.z = tilt || 0;
+      return g;
+    }
+
+    
     /** Returns a petal-shaped flat curve */
     function petalShape(length, width) {
       const s = new THREE.Shape();
@@ -138,86 +233,6 @@
       return s;
     }
 
-    /**
-     * createOrchid(x, y, z, scale, hue)
-     *   hue  0.0 = red,  0.5 = cyan,  0.75 = purple,  0.85 = pink/violet
-     */
-    function createOrchid(x, y, z, scale, hue) {
-      const group = new THREE.Group();
-
-      const petalColor  = new THREE.Color().setHSL(hue,        0.6, 0.55);
-      const lipColor    = new THREE.Color().setHSL(hue + 0.05, 0.9, 0.6);
-      const centerColor = new THREE.Color().setHSL(hue - 0.05, 0.8, 0.75);
-
-      const petalMat = new THREE.MeshPhongMaterial({
-        color: petalColor,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.88,
-        shininess: 60,
-        specular: new THREE.Color(0xffffff)
-      });
-
-      const lipMat = new THREE.MeshPhongMaterial({
-        color: lipColor,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.92,
-        shininess: 80,
-        specular: new THREE.Color(0xffffff)
-      });
-
-      // Five petals arranged in a ring
-      [90, 162, 234, 306, 18].forEach((deg, i) => {
-        const isSepal = i < 3;                // first 3 are slightly longer
-        const len = isSepal ? 1.0 : 0.85;
-        const wid = isSepal ? 0.28 : 0.22;
-        const geo = new THREE.ShapeGeometry(petalShape(len, wid), 16);
-        const mesh = new THREE.Mesh(geo, petalMat.clone());
-        const rad = (deg * Math.PI) / 180;
-        mesh.rotation.z = -rad;
-        mesh.rotation.x = -0.25 + Math.random() * 0.15;
-        mesh.position.set(Math.cos(rad) * 0.12, Math.sin(rad) * 0.12, -0.05 * i);
-        group.add(mesh);
-      });
-
-      // Lip petal pointing downward
-      const lip = new THREE.Mesh(
-        new THREE.ShapeGeometry(lipShape(0.7, 0.4), 16),
-        lipMat
-      );
-      lip.rotation.x = 0.3;
-      lip.position.set(0, -0.18, 0.05);
-      group.add(lip);
-
-      // Central column
-      const col = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.04, 0.35, 8),
-        new THREE.MeshPhongMaterial({ color: centerColor, shininess: 100 })
-      );
-      col.rotation.x = Math.PI / 2;
-      col.position.set(0, 0, 0.2);
-      group.add(col);
-
-      // Curved stem
-      const stemCurve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3( 0.00,  0.0,  0.00),
-        new THREE.Vector3( 0.10, -0.5,  0.00),
-        new THREE.Vector3(-0.05, -1.2, -0.10),
-        new THREE.Vector3( 0.05, -2.0, -0.15)
-      ]);
-      const stem = new THREE.Mesh(
-        new THREE.TubeGeometry(stemCurve, 12, 0.025, 6, false),
-        new THREE.MeshPhongMaterial({ color: 0x2a4a20, shininess: 30 })
-      );
-      stem.position.y = -0.1;
-      group.add(stem);
-
-      group.position.set(x, y, z);
-      group.scale.setScalar(scale);
-      return group;
-    }
-
 
     /* =====================================================
        PLACE ORCHIDS IN THE SCENE
@@ -225,13 +240,15 @@
            x = left/right,  y = up/down,  z = depth
            s = size,  h = colour hue (0–1)
     ===================================================== */
-    const orchidData = [
-      { x: -2.2, y:  0.5, z:  0.0, s: 1.10, h: 0.85 },
-      { x:  2.0, y:  0.2, z: -0.5, s: 0.95, h: 0.78 },
-      { x:  0.3, y:  1.8, z: -1.5, s: 0.75, h: 0.88 },
-      { x: -3.2, y: -0.8, z: -1.0, s: 0.80, h: 0.90 },
-      { x:  3.2, y: -0.5, z: -2.0, s: 0.65, h: 0.82 },
-      { x: -0.5, y: -1.5, z: -2.0, s: 0.60, h: 0.87 },
+    const flowerData = [
+      { x:  0.0, y:  0.3, z:  0.5, s: 2.20, t:  0.00 },
+      // { x: -2.6, y:  0.8, z: -0.3, s: 1.00, t:  0.12 },
+      // { x:  2.5, y:  0.5, z: -0.5, s: 1.00, t: -0.10 },
+      // { x: -1.2, y: -1.4, z: -0.8, s: 0.82, t:  0.20 },
+      // { x:  1.5, y: -1.2, z: -1.0, s: 0.82, t: -0.15 },
+      // { x: -3.5, y: -0.6, z: -1.5, s: 0.70, t:  0.08 },
+      // { x:  3.4, y:  1.1, z: -2.0, s: 0.65, t: -0.08 },
+      // { x:  0.6, y:  2.0, z: -2.5, s: 0.60, t:  0.05 },
     ];
 
     const orchids = orchidData.map(d => {
