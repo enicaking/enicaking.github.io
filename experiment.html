@@ -76,9 +76,13 @@ function zoomUV(geometry, zoomX = 1.2, zoomY = 1.2) {
   uvAttr.needsUpdate = true;
 }
 
-/* ── Load textures from real petal images ── */
+/* ── Load textures from real petal images (force reload with cache buster) ── */
 const loader = new THREE.TextureLoader();
-const loadTexture = (url) => new Promise((resolve) => loader.load(url, resolve));
+const loadTexture = (url) => new Promise((resolve) => {
+  // Append a unique timestamp to bypass browser cache
+  const cacheBuster = '?v=' + Date.now();
+  loader.load(url + cacheBuster, resolve);
+});
 
 Promise.all([
   loadTexture('petal_upper.png'),
@@ -110,7 +114,7 @@ Promise.all([
   const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
   const lGeo = new THREE.ShapeGeometry(lowerPetalShape(), 24);
 
-  // 🔍 Zoom in the UVs so the petal fills the shape (crop transparent edges)
+  // Zoom in the UVs so the petal fills the shape (crop transparent edges)
   zoomUV(uGeo, 1.15, 1.15);   // Adjust these numbers until the image fits perfectly
   zoomUV(lGeo, 1.15, 1.15);
 
