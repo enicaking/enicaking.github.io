@@ -61,6 +61,21 @@ function lowerPetalShape() {
   return s;
 }
 
+/* ── Helper: Zoom UVs toward the center, cropping texture margins ── */
+function zoomUV(geometry, zoomX = 1.2, zoomY = 1.2) {
+  const uvAttr = geometry.attributes.uv;
+  if (!uvAttr) return;
+  for (let i = 0; i < uvAttr.count; i++) {
+    let u = uvAttr.getX(i);
+    let v = uvAttr.getY(i);
+    // Scale around (0.5, 0.5)
+    u = 0.5 + (u - 0.5) * zoomX;
+    v = 0.5 + (v - 0.5) * zoomY;
+    uvAttr.setXY(i, u, v);
+  }
+  uvAttr.needsUpdate = true;
+}
+
 /* ── Load textures from real petal images ── */
 const loader = new THREE.TextureLoader();
 const loadTexture = (url) => new Promise((resolve) => loader.load(url, resolve));
@@ -69,7 +84,11 @@ Promise.all([
   loadTexture('petal_upper.png'),
   loadTexture('petal_lower.png')
 ]).then(([upperTex, lowerTex]) => {
-  // Materials with loaded textures
+  // Ensure clamping (transparent outside 0‑1)
+  upperTex.wrapS = upperTex.wrapT = THREE.ClampToEdgeWrapping;
+  lowerTex.wrapS = lowerTex.wrapT = THREE.ClampToEdgeWrapping;
+
+  // Materials
   const matUpper = new THREE.MeshPhongMaterial({
     map: upperTex,
     side: THREE.DoubleSide,
@@ -90,6 +109,10 @@ Promise.all([
   // Geometries
   const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
   const lGeo = new THREE.ShapeGeometry(lowerPetalShape(), 24);
+
+  // 🔍 Zoom in the UVs so the petal fills the shape (crop transparent edges)
+  zoomUV(uGeo, 1.15, 1.15);   // Adjust these numbers until the image fits perfectly
+  zoomUV(lGeo, 1.15, 1.15);
 
   /* ── Orchid factory ── */
   function createVanda(x, y, z, scale, tilt) {
@@ -134,13 +157,6 @@ Promise.all([
   /* ── Place flowers ── */
   const flowerData = [
     { x:  0.0, y:  0.3, z:  0.5, s: 2.20, t:  0.00 },
-    // { x: -2.6, y:  0.8, z: -0.3, s: 1.00, t:  0.12 },
-    // { x:  2.5, y:  0.5, z: -0.5, s: 1.00, t: -0.10 },
-    // { x: -1.2, y: -1.4, z: -0.8, s: 0.82, t:  0.20 },
-    // { x:  1.5, y: -1.2, z: -1.0, s: 0.82, t: -0.15 },
-    // { x: -3.5, y: -0.6, z: -1.5, s: 0.70, t:  0.08 },
-    // { x:  3.4, y:  1.1, z: -2.0, s: 0.65, t: -0.08 },
-    // { x:  0.6, y:  2.0, z: -2.5, s: 0.60, t:  0.05 },
   ];
 
   const flowers = flowerData.map(d => {
@@ -149,7 +165,7 @@ Promise.all([
     return f;
   });
 
-  /* ── Animation (starts after textures load) ── */
+  /* ── Animation ── */
   let t = 0;
   function animate() {
     requestAnimationFrame(animate);
@@ -174,7 +190,7 @@ Promise.all([
   animate();
 }).catch(err => console.error('Texture loading failed:', err));
 
-/* ── Floating pollen particles (unaffected by textures) ── */
+/* ── Floating pollen particles ── */
 const pCount = 300;
 const pPos = new Float32Array(pCount * 3);
 for (let i = 0; i < pCount; i++) {
