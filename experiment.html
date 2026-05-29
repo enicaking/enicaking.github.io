@@ -131,18 +131,18 @@ function createVanda(x, y, z, scale, tilt) {
   const g = new THREE.Group();
 
   // Textures
-  const upperTex = makePetalTexture('#e8c8e0', '#9040a0', true);
-  const lowerTex = makePetalTexture('#c8a0c8', '#6020a0', true);
+  const upperTex = makePetalTexture('#f2adc4', '#9040a0', true);
+  const lowerTex = makePetalTexture('#4a1b28', '#6020a0', true);
   const lipTex   = makePetalTexture('#7a1040', '#3a0020', false);
 
   const matUpper = new THREE.MeshPhongMaterial({
     map: upperTex, side: THREE.DoubleSide,
-    transparent: true, opacity: 0.93,
+    transparent: true, opacity: 1.00,
     shininess: 55, specular: new THREE.Color(0xffffff)
   });
   const matLower = new THREE.MeshPhongMaterial({
     map: lowerTex, side: THREE.DoubleSide,
-    transparent: true, opacity: 0.93,
+    transparent: true, opacity: 0.90,
     shininess: 55, specular: new THREE.Color(0xffffff)
   });
   const matLip = new THREE.MeshPhongMaterial({
@@ -151,15 +151,16 @@ function createVanda(x, y, z, scale, tilt) {
     shininess: 90, specular: new THREE.Color(0xff80c0)
   });
 
-  /* Upper 2 petals — top-left and top-right */
-  const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
+  /* Upper petals — top-left and top-right */
+const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
+[0].forEach(deg => {          
   const m = new THREE.Mesh(uGeo, matUpper);
   const r = (deg * Math.PI) / 180;
   m.rotation.z = -r;
-  m.rotation.x = -0.18;          // tilt slightly toward viewer
+  m.rotation.x = -0.18;
   m.position.set(Math.sin(r) * 0.08, Math.cos(r) * 0.08, 0);
   g.add(m);
-  });
+});             
 
   /* Lower 2 petals — bottom-left and bottom-right, angled down */
   const lGeo = new THREE.ShapeGeometry(lowerPetalShape(), 24);
@@ -167,45 +168,45 @@ function createVanda(x, y, z, scale, tilt) {
     const m = new THREE.Mesh(lGeo, matLower);
     const r = (deg * Math.PI) / 180;
     m.rotation.z = -r;
-    m.rotation.x = 0.22;           // angle slightly back
+    m.rotation.x = 0.0;           // angle slightly back
     m.position.set(Math.sin(r) * 0.10, Math.cos(r) * 0.10, -0.04);
     g.add(m);
   });
 
   /* Horizontal spread petals — left and right */
-  [-90, 90].forEach(deg => {
+  [-70, 70].forEach(deg => {
     const m = new THREE.Mesh(uGeo, matUpper);
     const r = (deg * Math.PI) / 180;
     m.rotation.z = -r;
-    m.rotation.x = -0.08;
+    m.rotation.x = -0.0;          // angle forward
     m.position.set(Math.sin(r) * 0.09, Math.cos(r) * 0.09, 0.02);
     g.add(m);
   });
 
   /* 3-lobed lip in the centre */
   // Side lobes
-  const sideGeo = new THREE.ShapeGeometry(lipLobeShape(0.18, 0.28), 12);
-  [-0.22, 0.22].forEach(ox => {
-    const m = new THREE.Mesh(sideGeo, matLip);
-    m.rotation.x = 0.5;
-    m.position.set(ox, -0.12, 0.18);
-    g.add(m);
-  });
+  // const sideGeo = new THREE.ShapeGeometry(lipLobeShape(0.18, 0.28), 12);
+  // [-0.22, 0.22].forEach(ox => {
+  //   const m = new THREE.Mesh(sideGeo, matLip);
+  //   m.rotation.x = 0.5;
+  //   m.position.set(ox, -0.12, 0.18);
+  //   g.add(m);
+  // });
   // Centre lobe (slightly larger, points forward)
-  const centreGeo = new THREE.ShapeGeometry(lipLobeShape(0.22, 0.38), 12);
-  const centre = new THREE.Mesh(centreGeo, matLip);
-  centre.rotation.x = 0.6;
-  centre.position.set(0, -0.22, 0.22);
-  g.add(centre);
+  // const centreGeo = new THREE.ShapeGeometry(lipLobeShape(0.22, 0.38), 12);
+  // const centre = new THREE.Mesh(centreGeo, matLip);
+  // centre.rotation.x = 0.6;
+  // centre.position.set(0, -0.22, 0.22);
+  // g.add(centre);
 
-  // Column (short, gold-tipped)
-  const col = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.05, 0.04, 0.28, 8),
-    new THREE.MeshPhongMaterial({ color: 0xf0d060, shininess: 120 })
-  );
-  col.rotation.x = Math.PI / 2;
-  col.position.set(0, 0.04, 0.18);
-  g.add(col);
+  // // Column (short, gold-tipped)
+  // const col = new THREE.Mesh(
+  //   new THREE.CylinderGeometry(0.05, 0.04, 0.28, 8),
+  //   new THREE.MeshPhongMaterial({ color: 0xf0d060, shininess: 120 })
+  // );
+  // col.rotation.x = Math.PI / 2;
+  // col.position.set(0, 0.04, 0.18);
+  // g.add(col);
 
   g.position.set(x, y, z);
   g.scale.setScalar(scale);
@@ -215,14 +216,14 @@ function createVanda(x, y, z, scale, tilt) {
 
 /* ── Place flowers ── */
 const flowerData = [
-  { x:  0.0, y:  0.3, z:  0.5, s: 1.20, t:  0.00 },
-  { x: -2.6, y:  0.8, z: -0.3, s: 1.00, t:  0.12 },
-  { x:  2.5, y:  0.5, z: -0.5, s: 1.00, t: -0.10 },
-  { x: -1.2, y: -1.4, z: -0.8, s: 0.82, t:  0.20 },
-  { x:  1.5, y: -1.2, z: -1.0, s: 0.82, t: -0.15 },
-  { x: -3.5, y: -0.6, z: -1.5, s: 0.70, t:  0.08 },
-  { x:  3.4, y:  1.1, z: -2.0, s: 0.65, t: -0.08 },
-  { x:  0.6, y:  2.0, z: -2.5, s: 0.60, t:  0.05 },
+  { x:  0.0, y:  0.3, z:  0.5, s: 2.20, t:  0.00 },
+  // { x: -2.6, y:  0.8, z: -0.3, s: 1.00, t:  0.12 },
+  // { x:  2.5, y:  0.5, z: -0.5, s: 1.00, t: -0.10 },
+  // { x: -1.2, y: -1.4, z: -0.8, s: 0.82, t:  0.20 },
+  // { x:  1.5, y: -1.2, z: -1.0, s: 0.82, t: -0.15 },
+  // { x: -3.5, y: -0.6, z: -1.5, s: 0.70, t:  0.08 },
+  // { x:  3.4, y:  1.1, z: -2.0, s: 0.65, t: -0.08 },
+  // { x:  0.6, y:  2.0, z: -2.5, s: 0.60, t:  0.05 },
 ];
 
 const flowers = flowerData.map(d => {
@@ -258,8 +259,8 @@ let t = 0;
   requestAnimationFrame(animate);
   t += 0.007;
 
-  camera.position.x += (mx * 1.0 - camera.position.x) * 0.035;
-  camera.position.y += (my * 0.6 - camera.position.y) * 0.035;
+  camera.position.x += (mx * 1.0 - camera.position.x) * 0.055;
+  camera.position.y += (my * 0.6 - camera.position.y) * 0.055;
   camera.lookAt(0, 0, 0);
 
   flowers.forEach((f, i) => {
