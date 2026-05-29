@@ -161,7 +161,7 @@
     }
     
     /* ── Orchid ── */
-    function createVanda(x, y, z, scale, tilt) {
+    function createOrchid(x, y, z, scale, tilt) {
       const g = new THREE.Group();
     
       // Textures
@@ -251,7 +251,7 @@
       // { x:  0.6, y:  2.0, z: -2.5, s: 0.60, t:  0.05 },
     ];
 
-    const orchids = orchidData.map(d => {
+    const orchids = flowerData.map(d => {
       const o = createOrchid(d.x, d.y, d.z, d.s, d.h);
       scene.add(o);
       return o;
@@ -304,7 +304,7 @@
       orchids.forEach((orchid, i) => {
         orchid.rotation.y = Math.sin(time * 0.7 + i * 1.2) * 0.12;
         orchid.rotation.z = Math.sin(time * 0.5 + i * 0.8) * 0.06;
-        orchid.position.y = orchidData[i].y + Math.sin(time * 0.6 + i) * 0.05;
+        orchid.position.y = flowerData[i].y + Math.sin(time * 0.6 + i) * 0.05;
       });
 
       // Lights slowly orbit for shifting colour
