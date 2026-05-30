@@ -163,20 +163,25 @@
     /* ── Orchid ── */
     function createOrchid(x, y, z, scale, tilt) {
       const g = new THREE.Group();
-    
-      // Textures
-      const upperTex = makePetalTexture('#f2adc4', '#9040a0', 9, false); // upper petals
-      const lowerTex = makePetalTexture('#4a1b28', '#6020a0', 27, true); // lower petals
-    
-      const matUpper = new THREE.MeshPhongMaterial({
+
+      /* ── Load textures from real petal images ── */
+      const loader = new THREE.TextureLoader();
+      const loadTexture = (url) => new Promise((resolve) => loader.load(url, resolve));
+      
+      Promise.all([
+        loadTexture('petal_upper.png'),
+        loadTexture('petal_lower.png')
+      ]).then(([upperTex, lowerTex]) => {
+        // Materials with loaded textures
+        const matUpper = new THREE.MeshPhongMaterial({
           map: upperTex,
           side: THREE.DoubleSide,
           transparent: true,
           opacity: 0.9,
           shininess: 55,
           specular: new THREE.Color(0x555555)
-      });
-      const matLower = new THREE.MeshPhongMaterial({
+        });
+        const matLower = new THREE.MeshPhongMaterial({
           map: lowerTex,
           side: THREE.DoubleSide,
           transparent: true,
@@ -184,7 +189,29 @@
           alphaTest: 0.1,
           shininess: 30,
           specular: new THREE.Color(0x333333)
-      });
+        });
+      
+      // Textures
+      // const upperTex = makePetalTexture('#f2adc4', '#9040a0', 9, false); // upper petals
+      // const lowerTex = makePetalTexture('#4a1b28', '#6020a0', 27, true); // lower petals
+    
+      // const matUpper = new THREE.MeshPhongMaterial({
+      //     map: upperTex,
+      //     side: THREE.DoubleSide,
+      //     transparent: true,
+      //     opacity: 0.9,
+      //     shininess: 55,
+      //     specular: new THREE.Color(0x555555)
+      // });
+      // const matLower = new THREE.MeshPhongMaterial({
+      //     map: lowerTex,
+      //     side: THREE.DoubleSide,
+      //     transparent: true,
+      //     opacity: 0.9,
+      //     alphaTest: 0.1,
+      //     shininess: 30,
+      //     specular: new THREE.Color(0x333333)
+      // });
     
       /* Upper petals — top-left and top-right */
       const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
