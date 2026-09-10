@@ -3,329 +3,620 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>waling2xek</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <title>Enica King — Artist &amp; Data Scientist</title>
+  <meta name="description" content="Enica King — artist and data scientist." />
 
-    body {
-      background: #98887d;
-      overflow: hidden;
-      font-family: 'Georgia', serif;
+  <style>
+    :root {
+      --bg:     #0a0a0f;
+      --cream:  #f0e8d8;
+      --muted:  #8a7a6a;
+      --accent: #f2adc4;
+      --rule:   rgba(240, 232, 216, 0.12);
     }
 
-    canvas {
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'Georgia', serif;
+      line-height: 1.7;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ────────────────────────── NAV ────────────────────────── */
+    #nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.1rem clamp(1.25rem, 5vw, 3rem);
+      font-family: sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      background: linear-gradient(to bottom, rgba(10,10,15,0.92), rgba(10,10,15,0));
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    #nav.show { opacity: 1; transform: none; pointer-events: auto; }
+
+    #nav .brand { color: var(--cream); text-decoration: none; letter-spacing: 0.35em; }
+    #nav ul { display: flex; gap: clamp(1rem, 4vw, 2.25rem); list-style: none; }
+    #nav a { color: var(--muted); text-decoration: none; transition: color 0.25s; }
+    #nav a:hover, #nav a:focus-visible { color: var(--accent); }
+
+    /* ────────────────────────── HERO ────────────────────────── */
+    #hero {
+      position: relative;
+      height: 100vh;
+      height: 100dvh;      /* correct height on mobile browsers */
+      overflow: hidden;
+    }
+
+    #canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
       display: block;
     }
 
-    /* ── Text in the centre of the screen ── */
-    #hero {
+    #hero-content {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      pointer-events: none;
+      padding: 2rem;
+      pointer-events: none;   /* lets the mouse-drift effect still work */
+      will-change: opacity, transform;
     }
 
-    #hero h1 {
-      font-size: clamp(2rem, 5vw, 4rem);
+    #hero-content h1 {
+      font-size: clamp(2rem, 6vw, 4.5rem);
       font-weight: 300;
       letter-spacing: 0.3em;
-      color: #f0e8d8;
+      text-indent: 0.3em;
       text-transform: uppercase;
+      color: var(--cream);
     }
 
-    #hero p {
-      margin-top: 1rem;
-      font-size: clamp(0.75rem, 1.5vw, 1rem);
-      letter-spacing: 0.5em;
-      color: #8a7a6a;
-      text-transform: uppercase;
+    #hero-content p {
+      margin-top: 1.25rem;
       font-family: sans-serif;
+      font-size: clamp(0.65rem, 1.4vw, 0.8rem);
+      letter-spacing: 0.5em;
+      text-indent: 0.5em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
-    /* ── Small hint at the bottom ── */
-    #hint {
+    /* scroll hint */
+    #scroll-hint {
       position: absolute;
-      bottom: 1.5rem;
+      bottom: 1.75rem;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      color: #3a3030;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
       font-family: sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    #scroll-hint::after {
+      content: "";
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--muted), transparent);
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.25; transform: scaleY(0.55); transform-origin: top; }
+      50%      { opacity: 1;    transform: scaleY(1);    transform-origin: top; }
+    }
+
+    /* ────────────────────────── CONTENT ────────────────────────── */
+    main {
+      position: relative;
+      z-index: 5;
+      background: var(--bg);
+    }
+
+    .panel {
+      padding: clamp(5rem, 14vh, 10rem) clamp(1.5rem, 6vw, 3rem);
+      border-top: 1px solid var(--rule);
+    }
+    .inner { max-width: 880px; margin: 0 auto; }
+
+    .eyebrow {
+      font-family: sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      margin-bottom: 1.5rem;
+    }
+
+    .lede {
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      max-width: 46ch;
+    }
+
+    .body-text {
+      color: var(--muted);
+      max-width: 62ch;
+      font-size: 0.98rem;
+    }
+
+    p + p { margin-top: 1.1rem; }
+
+    /* work grid */
+    .grid {
+      display: grid;
+      gap: 2.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 3rem;
+    }
+    .card {
+      border-top: 1px solid var(--rule);
+      padding-top: 1.25rem;
+    }
+    .card .year {
+      font-family: sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.28em;
+      color: var(--muted);
+    }
+    .card h3 {
+      font-size: 1.1rem;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      margin: 0.5rem 0 0.6rem;
+    }
+    .card p { font-size: 0.9rem; color: var(--muted); }
+
+    /* links */
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 2rem;
+      margin-top: 2rem;
+    }
+    .links a {
+      color: var(--cream);
+      text-decoration: none;
+      font-family: sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--rule);
+      transition: color 0.25s, border-color 0.25s;
+    }
+    .links a:hover, .links a:focus-visible {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    footer {
+      padding: 3rem clamp(1.5rem, 6vw, 3rem);
+      border-top: 1px solid var(--rule);
+      text-align: center;
+      font-family: sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ────────────────────────── REVEAL ON SCROLL ────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition:
+        opacity 0.9s cubic-bezier(0.22, 0.61, 0.36, 1),
+        transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+      #scroll-hint::after { animation: none; }
     }
   </style>
 </head>
+
 <body>
 
-  <canvas id="canvas"></canvas>
+  <!-- ── fixed nav, fades in once you leave the hero ── -->
+  <nav id="nav">
+    <a class="brand" href="#hero">E.K.</a>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
 
-  <div id="hero">
-    <!-- ✏️  Change these two lines to your own name and title -->
-    <h1>Enica King</h1>
-    <p>Artist & Data Scientist</p>
-  </div>
+  <!-- ── FULL-PAGE HERO ── -->
+  <section id="hero">
+    <canvas id="canvas"></canvas>
 
-  <!-- Three.js library (loaded from a free CDN — no install needed) -->
+    <div id="hero-content">
+      <!-- ✏️ your name and title -->
+      <h1>Enica King</h1>
+      <p>Artist &amp; Data Scientist</p>
+    </div>
+
+    <div id="scroll-hint">Scroll</div>
+  </section>
+
+  <!-- ── THE REST OF THE PAGE ── -->
+  <main>
+
+    <section class="panel" id="about">
+      <div class="inner">
+        <p class="eyebrow reveal">About</p>
+        <h2 class="reveal">Where data becomes image.</h2>
+        <p class="lede reveal">
+          I work between the analytical and the aesthetic — generative systems,
+          visual essays, and interfaces that try to make large numbers feel human.
+        </p>
+        <p class="body-text reveal">
+          Replace this paragraph with your own story. Two or three sentences is
+          plenty: what you make, what you're curious about, and what you're
+          looking for next.
+        </p>
+        <p class="body-text reveal">
+          A second short paragraph works well here for background — where you've
+          studied or worked, awards, exhibitions, or the tools you reach for most.
+        </p>
+      </div>
+    </section>
+
+    <section class="panel" id="work">
+      <div class="inner">
+        <p class="eyebrow reveal">Selected Work</p>
+        <h2 class="reveal">Projects</h2>
+
+        <div class="grid">
+          <article class="card reveal">
+            <span class="year">2025</span>
+            <h3>Project One</h3>
+            <p>A one-line description of what it is and why it matters.</p>
+          </article>
+
+          <article class="card reveal" style="transition-delay:.08s">
+            <span class="year">2024</span>
+            <h3>Project Two</h3>
+            <p>A one-line description of what it is and why it matters.</p>
+          </article>
+
+          <article class="card reveal" style="transition-delay:.16s">
+            <span class="year">2024</span>
+            <h3>Project Three</h3>
+            <p>A one-line description of what it is and why it matters.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="contact">
+      <div class="inner">
+        <p class="eyebrow reveal">Contact</p>
+        <h2 class="reveal">Say hello.</h2>
+        <p class="body-text reveal">
+          Open to commissions, collaborations, and interesting problems.
+        </p>
+        <div class="links reveal">
+          <a href="mailto:you@example.com">Email</a>
+          <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>© <span id="year"></span> Enica King</footer>
+
+  <!-- Three.js from a free CDN — no install needed -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <script>
-    /* =====================================================
-       SETUP  —  renderer, scene, camera
-    ===================================================== */
-    const W = window.innerWidth;
-    const H = window.innerHeight;
+  /* ============================================================
+     1. PAGE BEHAVIOUR  (scroll fade, nav, reveal)
+  ============================================================ */
+  const hero        = document.getElementById('hero');
+  const heroContent = document.getElementById('hero-content');
+  const scrollHint  = document.getElementById('scroll-hint');
+  const nav         = document.getElementById('nav');
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas: document.getElementById('canvas'),
-      antialias: true
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  let ticking = false;
+
+  function onScroll() {
+    const y = window.scrollY;
+    const h = hero.clientHeight || 1;
+    const p = Math.min(y / h, 1);          // 0 at top → 1 once hero is gone
+
+    heroContent.style.opacity   = Math.max(0, 1 - p * 1.6).toFixed(3);
+    heroContent.style.transform = `translateY(${(-p * 50).toFixed(1)}px)`;
+    scrollHint.style.opacity    = Math.max(0, 1 - p * 3).toFixed(3);
+
+    nav.classList.toggle('show', y > h * 0.55);
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(onScroll);
+    }
+  }, { passive: true });
+
+  onScroll();
+
+  /* fade sections in as they enter the viewport */
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
     });
-    renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x0a0a0f, 1);
+  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
 
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x0a0a0f, 0.08);
-
-    const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 100);
-    camera.position.set(0, 0, 8);
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
 
-    /* =====================================================
-       LIGHTS  —  gives petals their colour and shine
-    ===================================================== */
-    scene.add(new THREE.AmbientLight(0x1a0a20, 2));
+  /* ============================================================
+     2. THREE.JS — the orchid hero scene
+  ============================================================ */
+  const canvas = document.getElementById('canvas');
 
-    const pinkLight = new THREE.PointLight(0xc07090, 3, 20);
-    pinkLight.position.set(-3, 3, 3);
-    scene.add(pinkLight);
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0a0a0f, 1);
 
-    const purpleLight = new THREE.PointLight(0x5040c0, 2, 20);
-    purpleLight.position.set(3, -2, 2);
-    scene.add(purpleLight);
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0a0a0f, 0.08);
 
-    const warmLight = new THREE.PointLight(0xe0c080, 1.5, 15);
-    warmLight.position.set(0, 4, -2);
-    scene.add(warmLight);
+  const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+  camera.position.set(0, 0, 8);
 
+  /* ── lights ── */
+  scene.add(new THREE.AmbientLight(0x1a0a20, 2));
 
-    /* =====================================================
-       ORCHID BUILDER
-       Each orchid is made from simple shapes:
-         • Petals  → flat bezier curves
-         • Column  → small cylinder in the centre
-         • Stem    → tube following a curved path
-    ===================================================== */
+  const pinkLight = new THREE.PointLight(0xc07090, 3, 20);
+  pinkLight.position.set(-3, 3, 3);
+  scene.add(pinkLight);
 
-    /* Build petal texture on a 2D canvas */
-    function makePetalTexture(baseHex, veinHex, veinCount = 7, spots = false) {
-      const size = 256;
-      const cv = document.createElement('canvas');
-      cv.width = cv.height = size;
-      const ctx = cv.getContext('2d');
-    
-      // 1) Fill entire canvas with base colour
-      ctx.fillStyle = baseHex;
-      ctx.fillRect(0, 0, size, size);
-    
-      // 2) Draw subtle gradient from base to tip (optional, gives depth)
-      const gradient = ctx.createLinearGradient(0, 0, 0, size);
-      gradient.addColorStop(0, baseHex);
-      gradient.addColorStop(1, 'rgba(255,255,255,0.08)');  // faint white at tip
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, size, size);
-    
-      return new THREE.CanvasTexture(cv);
-    }
-    
-    /* Petal shapes */
-    function upperPetalShape() {     // broad rounded
-      const s = new THREE.Shape();
-      s.moveTo(0, 0);
-      s.bezierCurveTo( 0.55, 0.08,  0.75, 0.55,  0.45, 1.05);
-      s.bezierCurveTo( 0.20, 1.35,  -0.20, 1.35, -0.45, 1.05);
-      s.bezierCurveTo(-0.75, 0.55, -0.55, 0.08,   0, 0);
-      return s;
-    }
-    
-    function lowerPetalShape() {    // wider, slightly triangular
-      const s = new THREE.Shape();
-      s.moveTo(0, 0);
-      s.bezierCurveTo( 0.65, 0.06,  0.90, 0.50,  0.55, 1.0);
-      s.bezierCurveTo( 0.30, 1.30, -0.30, 1.30, -0.55, 1.0);
-      s.bezierCurveTo(-0.90, 0.50, -0.65, 0.06,   0, 0);
-      return s;
-    }
-    
-    /* ── Orchid ── */
-    function createOrchid(x, y, z, scale, tilt) {
-      const g = new THREE.Group();
-      
-      // Textures
-      const upperTex = makePetalTexture('#f2adc4', '#9040a0', 9, false); // upper petals
-      const lowerTex = makePetalTexture('#4a1b28', '#6020a0', 27, true); // lower petals
-    
-      const matUpper = new THREE.MeshPhongMaterial({
-          map: upperTex,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.9,
-          shininess: 55,
-          specular: new THREE.Color(0x555555)
-      });
-      const matLower = new THREE.MeshPhongMaterial({
-          map: lowerTex,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.9,
-          alphaTest: 0.1,
-          shininess: 30,
-          specular: new THREE.Color(0x333333)
-      });
-    
-      /* Upper petals — top-left and top-right */
-      const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
-      [-70, 0, 70].forEach(deg => {          
-        const m = new THREE.Mesh(uGeo, matUpper);
-        const r = (deg * Math.PI) / 180;
-        m.rotation.z = -r;
-        m.rotation.x = -0.18;
-        m.position.set(Math.sin(r) * 0.08, Math.cos(r) * 0.08, 0);
-        g.add(m);
-      });             
-    
-      /* Lower 2 petals — bottom-left and bottom-right, angled down */
-      const lGeo = new THREE.ShapeGeometry(lowerPetalShape(), 24);
-      [-130, 130].forEach(deg => {
-        const m = new THREE.Mesh(lGeo, matLower);
-        const r = (deg * Math.PI) / 180;
-        m.rotation.z = -r;
-        m.rotation.x = 0.0;           // angle slightly back
-        m.position.set(Math.sin(r) * 0.10, Math.cos(r) * 0.10, -0.04);
-        g.add(m);
-      });
-    
-      g.position.set(x, y, z);
-      g.scale.setScalar(scale);
-      g.rotation.z = tilt || 0;
-      return g;
-    }
+  const purpleLight = new THREE.PointLight(0x5040c0, 2, 20);
+  purpleLight.position.set(3, -2, 2);
+  scene.add(purpleLight);
 
-    
-    /** Returns a petal-shaped flat curve */
-    function petalShape(length, width) {
-      const s = new THREE.Shape();
-      s.moveTo(0, 0);
-      s.bezierCurveTo( width * 0.7, length * 0.2,  width * 0.9, length * 0.6,  0, length);
-      s.bezierCurveTo(-width * 0.9, length * 0.6, -width * 0.7, length * 0.2,  0, 0);
-      return s;
-    }
+  const warmLight = new THREE.PointLight(0xe0c080, 1.5, 15);
+  warmLight.position.set(0, 4, -2);
+  scene.add(warmLight);
 
-    /** Returns the wider lip petal (labellum) shape */
-    function lipShape(length, width) {
-      const s = new THREE.Shape();
-      s.moveTo(0, 0);
-      s.bezierCurveTo( width * 1.2, length * 0.1,  width * 1.4, length * 0.5,  0, length);
-      s.bezierCurveTo(-width * 1.4, length * 0.5, -width * 1.2, length * 0.1,  0, 0);
-      return s;
-    }
+  /* ── orchid builder ── */
+  function makePetalTexture(baseHex) {
+    const size = 256;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = size;
+    const ctx = cv.getContext('2d');
 
+    ctx.fillStyle = baseHex;
+    ctx.fillRect(0, 0, size, size);
 
-    /* =====================================================
-       PLACE ORCHIDS IN THE SCENE
-       ✏️  Add, remove, or move entries to change the layout
-           x = left/right,  y = up/down,  z = depth
-           s = size,  h = colour hue (0–1)
-    ===================================================== */
-    const flowerData = [
-      { x:  0.0, y:  0.3, z:  0.5, s: 2.20, t:  0.00 },
-      // { x: -2.6, y:  0.8, z: -0.3, s: 1.00, t:  0.12 },
-      // { x:  2.5, y:  0.5, z: -0.5, s: 1.00, t: -0.10 },
-      // { x: -1.2, y: -1.4, z: -0.8, s: 0.82, t:  0.20 },
-      // { x:  1.5, y: -1.2, z: -1.0, s: 0.82, t: -0.15 },
-      // { x: -3.5, y: -0.6, z: -1.5, s: 0.70, t:  0.08 },
-      // { x:  3.4, y:  1.1, z: -2.0, s: 0.65, t: -0.08 },
-      // { x:  0.6, y:  2.0, z: -2.5, s: 0.60, t:  0.05 },
-    ];
+    const gradient = ctx.createLinearGradient(0, 0, 0, size);
+    gradient.addColorStop(0, baseHex);
+    gradient.addColorStop(1, 'rgba(255,255,255,0.08)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
 
-    const orchids = flowerData.map(d => {
-      const o = createOrchid(d.x, d.y, d.z, d.s, d.h);
-      scene.add(o);
-      return o;
+    return new THREE.CanvasTexture(cv);
+  }
+
+  function upperPetalShape() {          // broad, rounded
+    const s = new THREE.Shape();
+    s.moveTo(0, 0);
+    s.bezierCurveTo( 0.55, 0.08,  0.75, 0.55,  0.45, 1.05);
+    s.bezierCurveTo( 0.20, 1.35, -0.20, 1.35, -0.45, 1.05);
+    s.bezierCurveTo(-0.75, 0.55, -0.55, 0.08,   0, 0);
+    return s;
+  }
+
+  function lowerPetalShape() {          // wider, slightly triangular
+    const s = new THREE.Shape();
+    s.moveTo(0, 0);
+    s.bezierCurveTo( 0.65, 0.06,  0.90, 0.50,  0.55, 1.0);
+    s.bezierCurveTo( 0.30, 1.30, -0.30, 1.30, -0.55, 1.0);
+    s.bezierCurveTo(-0.90, 0.50, -0.65, 0.06,   0, 0);
+    return s;
+  }
+
+  function createOrchid(x, y, z, scale, tilt) {
+    const g = new THREE.Group();
+
+    const upperTex = makePetalTexture('#f2adc4');
+    const lowerTex = makePetalTexture('#4a1b28');
+
+    const matUpper = new THREE.MeshPhongMaterial({
+      map: upperTex,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9,
+      shininess: 55,
+      specular: new THREE.Color(0x555555)
     });
 
-
-    /* =====================================================
-       FLOATING DUST PARTICLES
-    ===================================================== */
-    const particleCount = 200;
-    const positions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      positions[i * 3]     = (Math.random() - 0.5) * 14;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
-    }
-    const dustGeo = new THREE.BufferGeometry();
-    dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    scene.add(new THREE.Points(
-      dustGeo,
-      new THREE.PointsMaterial({ color: 0xc0a0c0, size: 0.04, transparent: true, opacity: 0.5 })
-    ));
-
-
-    /* =====================================================
-       MOUSE TRACKING  —  camera gently follows the cursor
-    ===================================================== */
-    let mouseX = 0, mouseY = 0;
-    document.addEventListener('mousemove', e => {
-      mouseX =  (e.clientX / window.innerWidth  - 0.5) * 2;
-      mouseY = -(e.clientY / window.innerHeight - 0.5) * 2;
+    const matLower = new THREE.MeshPhongMaterial({
+      map: lowerTex,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9,
+      alphaTest: 0.1,
+      shininess: 30,
+      specular: new THREE.Color(0x333333)
     });
 
-
-    /* =====================================================
-       ANIMATION LOOP
-    ===================================================== */
-    let time = 0;
-
-    function animate() {
-      requestAnimationFrame(animate);
-      time += 0.008;
-
-      // Camera drifts toward the mouse position slowly
-      camera.position.x += (mouseX * 0.8 - camera.position.x) * 0.04;
-      camera.position.y += (mouseY * 0.5 - camera.position.y) * 0.04;
-      camera.lookAt(0, 0, 0);
-
-      // Each orchid sways like it's in a gentle breeze
-      orchids.forEach((orchid, i) => {
-        orchid.rotation.y = Math.sin(time * 0.7 + i * 1.2) * 0.12;
-        orchid.rotation.z = Math.sin(time * 0.5 + i * 0.8) * 0.06;
-        orchid.position.y = flowerData[i].y + Math.sin(time * 0.6 + i) * 0.05;
-      });
-
-      // Lights slowly orbit for shifting colour
-      pinkLight.position.x = Math.sin(time * 0.4) * 4;
-      pinkLight.position.y = Math.cos(time * 0.3) * 3;
-      purpleLight.position.x = Math.cos(time * 0.35) * 4;
-
-      renderer.render(scene, camera);
-    }
-
-    animate();
-
-
-    /* =====================================================
-       HANDLE WINDOW RESIZE
-    ===================================================== */
-    window.addEventListener('resize', () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+    /* upper petals — top-left, top-centre, top-right */
+    const uGeo = new THREE.ShapeGeometry(upperPetalShape(), 24);
+    [-70, 0, 70].forEach(deg => {
+      const m = new THREE.Mesh(uGeo, matUpper);
+      const r = (deg * Math.PI) / 180;
+      m.rotation.z = -r;
+      m.rotation.x = -0.18;
+      m.position.set(Math.sin(r) * 0.08, Math.cos(r) * 0.08, 0);
+      g.add(m);
     });
+
+    /* lower petals — bottom-left and bottom-right */
+    const lGeo = new THREE.ShapeGeometry(lowerPetalShape(), 24);
+    [-130, 130].forEach(deg => {
+      const m = new THREE.Mesh(lGeo, matLower);
+      const r = (deg * Math.PI) / 180;
+      m.rotation.z = -r;
+      m.rotation.x = 0.0;
+      m.position.set(Math.sin(r) * 0.10, Math.cos(r) * 0.10, -0.04);
+      g.add(m);
+    });
+
+    g.position.set(x, y, z);
+    g.scale.setScalar(scale);
+    g.rotation.z = tilt || 0;
+    return g;
+  }
+
+  /* ============================================================
+     FLOWER LAYOUT
+     x = left/right · y = up/down · z = depth
+     s = size       · t = tilt
+     Uncomment / edit these to arrange the bouquet.
+  ============================================================ */
+  const flowerData = [
+    { x:  0.0, y:  0.3, z:  0.5, s: 2.20, t:  0.00 },
+    // { x: -2.6, y:  0.8, z: -0.3, s: 1.00, t:  0.12 },
+    // { x:  2.5, y:  0.5, z: -0.5, s: 1.00, t: -0.10 },
+    // { x: -1.2, y: -1.4, z: -0.8, s: 0.82, t:  0.20 },
+    // { x:  1.5, y: -1.2, z: -1.0, s: 0.82, t: -0.15 },
+    // { x: -3.5, y: -0.6, z: -1.5, s: 0.70, t:  0.08 },
+    // { x:  3.4, y:  1.1, z: -2.0, s: 0.65, t: -0.08 },
+    // { x:  0.6, y:  2.0, z: -2.5, s: 0.60, t:  0.05 },
+  ];
+
+  const orchids = flowerData.map(d => {
+    const o = createOrchid(d.x, d.y, d.z, d.s, d.t);
+    scene.add(o);
+    return o;
+  });
+
+  /* ── floating dust ── */
+  const particleCount = 200;
+  const positions = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    positions[i * 3]     = (Math.random() - 0.5) * 14;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 8;
+  }
+  const dustGeo = new THREE.BufferGeometry();
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  scene.add(new THREE.Points(
+    dustGeo,
+    new THREE.PointsMaterial({
+      color: 0xc0a0c0, size: 0.04, transparent: true, opacity: 0.5
+    })
+  ));
+
+  /* ── mouse / touch drift ── */
+  let mouseX = 0, mouseY = 0;
+
+  function setPointer(clientX, clientY) {
+    mouseX =  (clientX / window.innerWidth  - 0.5) * 2;
+    mouseY = -(clientY / window.innerHeight - 0.5) * 2;
+  }
+
+  window.addEventListener('mousemove', e => setPointer(e.clientX, e.clientY), { passive: true });
+  window.addEventListener('touchmove', e => {
+    if (e.touches[0]) setPointer(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+
+  /* ── sizing: the canvas matches the hero, not the window ── */
+  function resize() {
+    const w = hero.clientWidth;
+    const h = hero.clientHeight;
+    if (!w || !h) return;
+
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);   // false = don't touch the CSS size
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', resize);
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(hero);
+
+  /* ── stop drawing when the hero is off-screen (saves battery) ── */
+  let heroVisible = true;
+  new IntersectionObserver(entries => {
+    heroVisible = entries[0].isIntersecting;
+  }, { threshold: 0 }).observe(hero);
+
+  /* ── animation loop ── */
+  let time = 0;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if (!heroVisible) return;
+
+    time += 0.008;
+
+    camera.position.x += (mouseX * 0.8 - camera.position.x) * 0.04;
+    camera.position.y += (mouseY * 0.5 - camera.position.y) * 0.04;
+    camera.lookAt(0, 0, 0);
+
+    orchids.forEach((orchid, i) => {
+      orchid.rotation.y = Math.sin(time * 0.7 + i * 1.2) * 0.12;
+      orchid.rotation.z = Math.sin(time * 0.5 + i * 0.8) * 0.06;
+      orchid.position.y = flowerData[i].y + Math.sin(time * 0.6 + i) * 0.05;
+    });
+
+    pinkLight.position.x   = Math.sin(time * 0.4)  * 4;
+    pinkLight.position.y   = Math.cos(time * 0.3)  * 3;
+    purpleLight.position.x = Math.cos(time * 0.35) * 4;
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
   </script>
 </body>
 </html>
